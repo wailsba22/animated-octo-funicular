@@ -2,12 +2,10 @@ import random
 import asyncio
 from datetime import datetime, timedelta
 from telegram import Bot
-from telegram.ext import CommandHandler
+from telegram.ext import ApplicationBuilder, CommandHandler
 
-from telegram.ext import ApplicationBuilder
-
-BOT_TOKEN = '7526799568:AAGI-xF6clTfWuUDm5yfVCFsx4U-v6adBbs'  # Replace with your bot token
-CHAT_ID = 5091229212  # Replace with your chat ID as integer
+BOT_TOKEN = '7526799568:AAGI-xF6clTfWuUDm5yfVCFsx4U-v6adBbs'
+CHAT_ID = 5091229212
 
 EXERCISES = [
     "Push-ups - 10 reps",
@@ -24,13 +22,6 @@ EXERCISES = [
     "Side Plank - 20 seconds each side"
 ]
 
-async def time_command(update, context):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    await update.message.reply_text(f"🕒 Current time: {now}")
-
-async def name_command(update, context):
-    await update.message.reply_text("👋 Your name is Wail!")  # Change this if you want
-
 async def send_daily_workout(bot: Bot):
     workout = random.sample(EXERCISES, 3)
     message = "🏋️‍♂️ Today's Home Workout:\n\n" + "\n".join(f"- {ex}" for ex in workout)
@@ -45,10 +36,15 @@ async def schedule_daily(app):
         wait_seconds = (target - now_dt).total_seconds()
         await asyncio.sleep(wait_seconds)
         await send_daily_workout(app.bot)
-        
+
+async def time_command(update, context):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    await update.message.reply_text(f"🕒 Current time: {now}")
+
+async def name_command(update, context):
+    await update.message.reply_text("👋 Your name is Wail!")
 
 async def main():
-
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("time", time_command))
@@ -58,3 +54,6 @@ async def main():
     print("Bot started, waiting to send daily workouts at 5 AM...")
     await app.run_polling()
 
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
