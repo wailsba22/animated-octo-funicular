@@ -1,5 +1,5 @@
 import random
-from telegram.ext import CommandHandler
+
 
 from datetime import datetime, time as dtime
 from telegram import Update
@@ -27,13 +27,7 @@ EXERCISES = [
     "Calf Raises - 15 reps",
     "Side Plank - 20 seconds each side"
 ]
-from datetime import datetime, timedelta
 
-async def time_command(update, context):
-    now_utc = datetime.utcnow()
-    local_time = now_utc + timedelta(hours=1)  # Change +1 to your timezone offset if needed
-    time_str = local_time.strftime('%Y-%m-%d %H:%M:%S')
-    await update.message.reply_text(f"🕒 Local time: {time_str}")
 async def send_daily_workout(context: ContextTypes.DEFAULT_TYPE):
     workout = random.sample(EXERCISES, 3)
     message = "🏋️‍♂️ Today's Home Workout:\n\n" + "\n".join(f"- {ex}" for ex in workout)
@@ -48,7 +42,7 @@ async def name_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(CommandHandler("time", time_command))
+
 
     app.add_handler(CommandHandler("time", time_command))
     app.add_handler(CommandHandler("name", name_command))
