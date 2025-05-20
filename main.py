@@ -1,8 +1,12 @@
 import random
-import asyncio
-from datetime import datetime, timedelta
-from telegram import Bot
-from telegram.ext import ApplicationBuilder, CommandHandler
+from datetime import datetime, time as dtime
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    JobQueue,
+)
 
 BOT_TOKEN = '7526799568:AAGI-xF6clTfWuUDm5yfVCFsx4U-v6adBbs'
 CHAT_ID = 5091229212
@@ -22,38 +26,30 @@ EXERCISES = [
     "Side Plank - 20 seconds each side"
 ]
 
-async def send_daily_workout(bot: Bot):
+async def send_daily_workout(context: ContextTypes.DEFAULT_TYPE):
     workout = random.sample(EXERCISES, 3)
     message = "🏋️‍♂️ Today's Home Workout:\n\n" + "\n".join(f"- {ex}" for ex in workout)
-    await bot.send_message(chat_id=CHAT_ID, text=message)
+    await context.bot.send_message(chat_id=CHAT_ID, text=message)
 
-async def schedule_daily(app):
-    while True:
-        now_dt = datetime.now()
-        target = now_dt.replace(hour=5, minute=0, second=0, microsecond=0)
-        if now_dt > target:
-            target += timedelta(days=1)
-        wait_seconds = (target - now_dt).total_seconds()
-        await asyncio.sleep(wait_seconds)
-        await send_daily_workout(app.bot)
-
-async def time_command(update, context):
+async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     await update.message.reply_text(f"🕒 Current time: {now}")
 
-async def name_command(update, context):
+async def name_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("👋 Your name is Wail!")
 
-async def main():
+def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("time", time_command))
     app.add_handler(CommandHandler("name", name_command))
 
-    app.create_task(schedule_daily(app))
-    print("Bot started, waiting to send daily workouts at 5 AM...")
-    await app.run_polling()
+    # Schedule daily workout at 5:00 AM server time
+    job_queue: JobQueue = app.job_queue
+    job_queue.run_daily(send_daily_workout, time=dtime(hour=5, minute=0))
 
-if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    print("Bot started and running...")
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
